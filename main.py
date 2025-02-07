@@ -112,8 +112,8 @@ async def scrape_homepage():
     url = "https://pagalfree.com/"
     page_content = await fetch_data(url)
 
-    if isinstance(page_content, dict):  # Error handling
-        return page_content
+    # if isinstance(page_content, dict):  # Error handling
+    #     return page_content
 
     soup = BeautifulSoup(page_content, "html.parser")
     categories = soup.find_all("div", class_="main_page_category_div")
