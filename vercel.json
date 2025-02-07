@@ -1,14 +1,14 @@
 {
   "builds": [
     {
-      "src": "pglfree.py",
+      "src": "main.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "pglfree.py"
+      "dest": "main.py"
     }
   ]
 }
