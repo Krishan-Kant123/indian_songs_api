@@ -1,11 +1,12 @@
-from fastapi import FastAPI, Query,HTTPException
-import requests
+from fastapi import FastAPI, Query
+import httpx
 from fastapi.responses import Response
 from bs4 import BeautifulSoup
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+import socket
 
-
+# Middleware for CORS
 middleware = [
     Middleware(
         CORSMiddleware,
@@ -18,11 +19,9 @@ middleware = [
 
 app = FastAPI(middleware=middleware)
 
-
-
-
-header = {
-     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+# Headers to mimic a real browser
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
     "Accept-Language": "en-US,en;q=0.9",
     "Referer": "https://www.google.com/",
     "Accept-Encoding": "gzip, deflate, br",
@@ -30,14 +29,35 @@ header = {
 }
 
 
-def scrape_pagalfree_search(query: str):
-    url = f"https://pagalfree.com/search/{query}"
-    response = requests.get(url, headers=header)
+# Function to resolve IPv4 (Prevents IPv6 issues)
+def get_ipv4_url(url: str) -> str:
+    domain = url.replace("https://", "").replace("http://", "").split("/")[0]
+    ip = socket.gethostbyname(domain)
+    return url.replace(domain, ip, 1)
+
+
+# Async function for making requests
+async def fetch_data(url: str):
+    ipv4_url = get_ipv4_url(url)  # Convert to IPv4
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(ipv4_url, headers=headers, follow_redirects=True)
 
     if response.status_code != 200:
-        return {"error": "Failed to retrieve the webpage"}
+        return {"error": f"Failed to retrieve the webpage. Status: {response.status_code}"}
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    return response.text
+
+
+# Scrape PagalFree search results
+async def scrape_pagalfree_search(query: str):
+    url = f"https://pagalfree.com/search/{query}"
+    page_content = await fetch_data(url)
+    
+    if isinstance(page_content, dict):  # Error handling
+        return page_content
+
+    soup = BeautifulSoup(page_content, "html.parser")
     music_items = soup.find_all("div", class_="main_page_category_music_txt")
 
     songs_data = []
@@ -60,13 +80,15 @@ def scrape_pagalfree_search(query: str):
 
     return songs_data
 
-def scrape_song_details(url: str):
-    response = requests.get(url, headers=header)
 
-    if response.status_code != 200:
-        return {"error": "Failed to retrieve the webpage"}
+# Scrape song details
+async def scrape_song_details(url: str):
+    page_content = await fetch_data(url)
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    if isinstance(page_content, dict):  # Error handling
+        return page_content
+
+    soup = BeautifulSoup(page_content, "html.parser")
     
     song_name = soup.find("div", class_="main_page_category_div").text.strip() if soup.find("div", class_="main_page_category_div") else None
     img_url = soup.find("div", class_="col-lg-3 col-md-3 col-sm-12 col-xs-12").find("img")["src"] if soup.find("div", class_="col-lg-3 col-md-3 col-sm-12 col-xs-12") else None
@@ -85,15 +107,15 @@ def scrape_song_details(url: str):
     }
 
 
-def scrape_homepage():
+# Scrape homepage songs
+async def scrape_homepage():
     url = "https://pagalfree.com/"
-    response = requests.get(url, headers=header)
-    return response
+    page_content = await fetch_data(url)
 
-    # if response.status_code != 200:
-    #     return {"error": "Failed to retrieve the webpage"}
+    if isinstance(page_content, dict):  # Error handling
+        return page_content
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    soup = BeautifulSoup(page_content, "html.parser")
     categories = soup.find_all("div", class_="main_page_category_div")
     music_data = {}
 
@@ -125,20 +147,22 @@ def scrape_homepage():
     return music_data
 
 
+# API Endpoints
 @app.get("/")
 def main():
-    return "hii"
+    return {"message": "Hello, FastAPI!"}
+
 
 @app.get("/search/")
-def search_songs(query: str = Query(..., description="Enter song name to search")):
-    return scrape_pagalfree_search(query)
+async def search_songs(query: str = Query(..., description="Enter song name to search")):
+    return await scrape_pagalfree_search(query)
 
 
 @app.get("/song-details/")
-def get_song_details(url: str = Query(..., description="Enter the song URL")):
-    return scrape_song_details(url)
+async def get_song_details(url: str = Query(..., description="Enter the song URL")):
+    return await scrape_song_details(url)
 
 
 @app.get("/homepage/")
-def get_homepage_songs():
-    return scrape_homepage()
+async def get_homepage_songs():
+    return await scrape_homepage()
