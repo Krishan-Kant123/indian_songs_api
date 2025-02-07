@@ -21,7 +21,7 @@ app = FastAPI(middleware=middleware)
 
 
 
-HEADERS = {
+header = {
      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
     "Accept-Language": "en-US,en;q=0.9",
     "Referer": "https://www.google.com/",
@@ -32,7 +32,7 @@ HEADERS = {
 
 def scrape_pagalfree_search(query: str):
     url = f"https://pagalfree.com/search/{query}"
-    response = requests.get(url, headers=HEADERS)
+    response = requests.get(url, headers=header)
 
     if response.status_code != 200:
         return {"error": "Failed to retrieve the webpage"}
@@ -61,7 +61,7 @@ def scrape_pagalfree_search(query: str):
     return songs_data
 
 def scrape_song_details(url: str):
-    response = requests.get(url, headers=HEADERS)
+    response = requests.get(url, headers=header)
 
     if response.status_code != 200:
         return {"error": "Failed to retrieve the webpage"}
@@ -87,7 +87,8 @@ def scrape_song_details(url: str):
 
 def scrape_homepage():
     url = "https://pagalfree.com/"
-    response = requests.get(url, headers=HEADERS)
+    response = requests.get(url, headers=header)
+    return response
 
     # if response.status_code != 200:
     #     return {"error": "Failed to retrieve the webpage"}
