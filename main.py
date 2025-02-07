@@ -89,8 +89,8 @@ def scrape_homepage():
     url = "https://pagalfree.com/"
     response = requests.get(url, headers=HEADERS)
 
-    if response.status_code != 200:
-        return {"error": "Failed to retrieve the webpage"}
+    # if response.status_code != 200:
+    #     return {"error": "Failed to retrieve the webpage"}
 
     soup = BeautifulSoup(response.text, "html.parser")
     categories = soup.find_all("div", class_="main_page_category_div")
