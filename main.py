@@ -5,14 +5,19 @@ from bs4 import BeautifulSoup
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Change this to specific domains if needed
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+middleware = [
+    Middleware(
+        CORSMiddleware,
+        allow_origins=['*'],
+        allow_credentials=True,
+        allow_methods=['*'],
+        allow_headers=['*']
+    )
+]
+
+app = FastAPI(middleware=middleware)
+
 
 
 
