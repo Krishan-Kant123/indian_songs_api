@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query,HTTPException
 import requests
+from fastapi.responses import Response
 from bs4 import BeautifulSoup
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 app.add_middleware(
