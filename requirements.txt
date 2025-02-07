@@ -3,3 +3,4 @@ requests==2.28.2
 beautifulsoup4==4.11.2
 uvicorn==0.20.0
 socket
+httpx
