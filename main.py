@@ -1,8 +1,18 @@
 from fastapi import FastAPI, Query
 import requests
 from bs4 import BeautifulSoup
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change this to specific domains if needed
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
