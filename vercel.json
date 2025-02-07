@@ -8,7 +8,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "pglfree.py"
+      "dest": "main.py"
     }
   ]
 }
